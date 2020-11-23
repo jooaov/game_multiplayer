@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Meu Primeiro Multiplayer</title>
-
+    <link rel="icon" type="image/png" href="https://img.icons8.com/nolan/64/controller.png">
     <style>
         #screen {
             border: 1px solid #CCC;
@@ -24,29 +24,136 @@
         //pega o canvas e seta o context para 2d
         const screen = document.getElementById('screen');
         const context = screen.getContext('2d');
+        const currentPlayerId = 'player1';
 
-        const game = {
-            players: {
-                'player1': { x: 1, y: 1 },
-                'player2': { x: 9, y: 9 }
-            },
-            'fruits': {
-                'fruit1': { x: 3, y: 1 }
+
+
+        function createGame() {
+
+            const state = {
+                players: {
+                    'player1': { x: 1, y: 1 },
+                    'player2': { x: 9, y: 9 }
+                },
+                'fruits': {
+                    'fruit1': { x: 3, y: 1 }
+                }
+            }
+
+            function movePlayer(command) {
+                console.log(`Moving ${command.playerId} with ${command.keyPressed}`);
+
+                const aceptyMoves = {
+                    ArrowUp(player) {
+                        console.log('Up');
+                        if (keyPressed === "ArrowUp") {
+                            player.y = player.y - 1;
+                        }
+                    },
+                    ArrowDown(player) {
+                        console.log('down');
+                        if (keyPressed === "ArrowDown") {
+                            player.y = player.y + 1;
+                        }
+                    },
+                    ArrowRight(player) {
+                        console.log('right');
+                        if (keyPressed === "ArrowRight") {
+                            player.x = player.x + 1;
+                        }
+                    },
+                    ArrowLeft(player) {
+                        console.log('left');
+                        if (keyPressed === "ArrowLeft") {
+                            player.x = player.x - 1;
+                        }
+                    }
+                }
+
+                const keyPressed = command.keyPressed;
+                const player = state.players[command.playerId];
+                const moveFunction = aceptyMoves[keyPressed];
+                if (moveFunction) {
+                    moveFunction(player);
+                }
+
+                if (player.x > 9) {
+                    player.x = 0;
+                } else if (player.x < 0) {
+                    player.x = 9;
+                }
+
+                if (player.y > 9) {
+                    player.y = 0;
+                } else if (player.y < 0) {
+                    player.y = 9;
+                }
+
+            }
+
+            return {
+                movePlayer,
+                state
             }
         }
+
+        const game = createGame();
+        const keybordListener = createKeybordListener();
+        keybordListener.subscribe(game.movePlayer);
         rederScreen();
+
+        function createKeybordListener() {
+            const state = {
+                observers: []
+            }
+
+            function subscribe(observerFuncition) {
+                state.observers.push(observerFuncition);
+            }
+
+            //executa a função moveplayer com o parametro comando
+            function notifyAll(command) {
+                console.log(`Notifying ${state.observers.length} observers`);
+
+                for (const observerFuncition of state.observers) {
+                    observerFuncition(command);
+
+                }
+            }
+            document.addEventListener('keydown', handleKeydown);
+
+            function handleKeydown(event) {
+                const keyPressed = event.key;
+                //comando que é enviado a função
+                const command = {
+                    playerId: 'player1',
+                    keyPressed
+                }
+                notifyAll(command);
+
+            }
+            return {
+                subscribe
+            }
+        }
+
         function rederScreen() {
-            for (playerId in game.players) {
-                const player = game.players[playerId];
+            context.fillStyle = 'white';
+            //pega o total do canvas e limpa
+            context.clearRect(0, 0, 10, 10);
+
+            for (const playerId in game.state.players) {
+                const player = game.state.players[playerId];
+                //teste
                 context.fillStyle = 'black';
                 context.fillRect(player.x, player.y, 1, 1);
             }
-            for (fruitsId in game.fruits) {
-                const fruit = game.fruits[fruitsId];
+            for (const fruitsId in game.state.fruits) {
+                const fruit = game.state.fruits[fruitsId];
                 context.fillStyle = 'green';
                 context.fillRect(fruit.x, fruit.y, 1, 1);
             }
-            rederScreen();
+            requestAnimationFrame(rederScreen);
         }
 
     </script>
