@@ -1,1 +1,1 @@
-game multiplayer para estudo de soket.io e canvas
+game multiplayer para estudo de Socket.IO e canvas
